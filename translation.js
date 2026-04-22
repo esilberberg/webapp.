@@ -118,21 +118,6 @@ refreshBtn.addEventListener('click', () => {
 });
 
 // ==========================
-// HELPER 
-// ==========================
-function formatURL(url = '') {
-  url = url.trim();
-
-  if (!url) return null;
-
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return url;
-  }
-
-  return 'https://' + url;
-}
-  
-// ==========================
 // FILTER
 // ==========================
 function filterData(query) {
@@ -160,17 +145,14 @@ function filterData(query) {
 // ==========================
 function displayData(data) {
 
-  if (!display) {
-  console.error("Missing #display element in HTML");
-  return;
-}
+  if (!display) return;
 
   display.innerHTML = data.map(obj => `
     <article class="item">
 
       <div class="item-header">
         <h2>
-<a href="${formatURL(obj.URL)}" target="_blank" rel="noopener noreferrer">
+          <a href="${obj.URL}" target="_blank" rel="noopener noreferrer">
             ${obj.SNAC_Holding_Repository || ''}
           </a>
         </h2>
@@ -184,7 +166,7 @@ function displayData(data) {
           <span class="inline-label">
             ${translations[currentLanguage].resourceTitle}:
           </span>
-<a href="${formatURL(obj.URL)}" target="_blank" rel="noopener noreferrer">
+          <a href="${obj.URL}" target="_blank" rel="noopener noreferrer">
             ${obj.Resource_Title || ''}
           </a>
         </h3>
