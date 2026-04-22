@@ -152,7 +152,7 @@ function displayData(data) {
 
       <div class="item-header">
         <h2>
-          <a href="${obj.URL}" target="_blank" rel="noopener noreferrer">
+          <a href="${obj.Resource_URL}" target="_blank" rel="noopener noreferrer">
             ${obj.SNAC_Holding_Repository || ''}
           </a>
         </h2>
@@ -166,7 +166,7 @@ function displayData(data) {
           <span class="inline-label">
             ${translations[currentLanguage].resourceTitle}:
           </span>
-          <a href="${obj.URL}" target="_blank" rel="noopener noreferrer">
+          <a href="${obj.Resource_URL}" target="_blank" rel="noopener noreferrer">
             ${obj.Resource_Title || ''}
           </a>
         </h3>
