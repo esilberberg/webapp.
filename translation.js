@@ -1,8 +1,11 @@
 
+// ==========================
+// WAIT FOR DOM
+// ==========================
 document.addEventListener("DOMContentLoaded", () => {
 
 // ==========================
-// API + DOM
+// API ENDPOINT + DOM
 // ==========================
 const googleSheet = 'https://script.google.com/macros/s/AKfycbwgBOHLkyG2yw4IIgaVvhXx703rzhU9lM5jca4PAqB3eSxmA67KeCxA4RY-jtAKqrVd/exec';
 
@@ -13,13 +16,7 @@ const searchBtn = document.getElementById('search-btn');
 const refreshBtn = document.getElementById('refresh-btn');
 
 // ==========================
-// STATE
-// ==========================
-let apiData = [];
-let currentLanguage = 'en';
-
-// ==========================
-// TRANSLATIONS (UI ONLY)
+// UI TRANSLATIONS (ONLY UI)
 // ==========================
 const translations = {
   en: {
@@ -27,22 +24,28 @@ const translations = {
     searchBtn: "Search",
     refreshBtn: "Refresh",
     resourceTitle: "Resource Title",
-    scope: "Scope and Contents",
-    subjects: "Subjects in English",
     languages: "Languages",
-    countries: "Countries"
+    countries: "Countries",
+    scope: "Scope and Contents",
+    subjects: "Subjects in English"
   },
   es: {
     welcomeMsg: "Explorar la colección",
     searchBtn: "Buscar",
     refreshBtn: "Recargar",
     resourceTitle: "Título del recurso",
-    scope: "Alcance y Contenido",
-    subjects: "Materias en Español",
     languages: "Idiomas",
-    countries: "Países"
+    countries: "Países",
+    scope: "Alcance y Contenido",
+    subjects: "Materias en Español"
   }
 };
+
+// ==========================
+// STATE
+// ==========================
+let apiData = [];
+let currentLanguage = 'en';
 
 // ==========================
 // LANGUAGE SWITCHER
@@ -59,6 +62,9 @@ if (langSwitcher) {
   });
 }
 
+// ==========================
+// TRANSLATION FUNCTION
+// ==========================
 function translatePage(language) {
   currentLanguage = language;
 
@@ -66,12 +72,11 @@ function translatePage(language) {
   searchBtn.textContent = translations[language].searchBtn;
   refreshBtn.textContent = translations[language].refreshBtn;
 
+  // re-render content in new language
   displayData(apiData);
 }
 
-// ==========================
-// INITIAL LANGUAGE
-// ==========================
+// initial language
 translatePage(currentLanguage);
 
 // ==========================
@@ -136,29 +141,7 @@ function filterData(query) {
 }
 
 // ==========================
-// HELPERS
-// ==========================
-
-// remove accents
-function removeDiacritics(str = '') {
-  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
-
-// 🔥 URL SANITIZER (FIXES GITHUB PAGES 404 ISSUE)
-function formatURL(url = '') {
-  url = url.trim();
-
-  if (!url) return '#';
-
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return url;
-  }
-
-  return 'https://' + url;
-}
-
-// ==========================
-// DISPLAY DATA
+// DISPLAY
 // ==========================
 function displayData(data) {
 
@@ -169,7 +152,7 @@ function displayData(data) {
 
       <div class="item-header">
         <h2>
-          <a href="${formatURL(obj.URL)}" target="_blank" rel="noopener noreferrer">
+          <a href="${obj.URL}" target="_blank" rel="noopener noreferrer">
             ${obj.SNAC_Holding_Repository || ''}
           </a>
         </h2>
@@ -183,8 +166,7 @@ function displayData(data) {
           <span class="inline-label">
             ${translations[currentLanguage].resourceTitle}:
           </span>
-
-          <a href="${formatURL(obj.URL)}" target="_blank" rel="noopener noreferrer">
+          <a href="${obj.URL}" target="_blank" rel="noopener noreferrer">
             ${obj.Resource_Title || ''}
           </a>
         </h3>
@@ -193,44 +175,36 @@ function displayData(data) {
           <span class="inline-label">
             ${translations[currentLanguage].scope}:
           </span>
-          ${
-            currentLanguage === "es"
-              ? obj.Alcance_y_Contenido || ''
-              : obj.Scope_and_Contents || ''
-          }
+          ${currentLanguage === "es"
+            ? obj.Alcance_y_Contenido || ''
+            : obj.Scope_and_Contents || ''}
         </p>
 
         <p>
           <span class="inline-label">
             ${translations[currentLanguage].subjects}:
           </span>
-          ${
-            currentLanguage === "es"
-              ? obj.Materias_en_Espanol || ''
-              : obj.Subjects_in_English || ''
-          }
+          ${currentLanguage === "es"
+            ? obj.Materias_en_Espanol || ''
+            : obj.Subjects_in_English || ''}
         </p>
 
         <p>
           <span class="inline-label">
             ${translations[currentLanguage].languages}:
           </span>
-          ${
-            currentLanguage === "es"
-              ? obj.Idiomas || obj.Languages || ''
-              : obj.Languages || ''
-          }
+          ${currentLanguage === "es"
+            ? obj.Idiomas || ''
+            : obj.Languages || ''}
         </p>
 
         <p>
           <span class="inline-label">
             ${translations[currentLanguage].countries}:
           </span>
-          ${
-            currentLanguage === "es"
-              ? obj.Paises || obj.Countries || ''
-              : obj.Countries || ''
-          }
+          ${currentLanguage === "es"
+            ? obj.Paises || ''
+            : obj.Countries || ''}
         </p>
 
       </div>
