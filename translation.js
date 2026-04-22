@@ -1,3 +1,9 @@
+
+// ==========================
+// WAIT FOR DOM
+// ==========================
+document.addEventListener("DOMContentLoaded", () => {
+
 // ==========================
 // API ENDPOINT + DOM
 // ==========================
@@ -8,94 +14,111 @@ const input = document.getElementById('input');
 const welcomeMsg = document.getElementById('welcome-msg');
 const searchBtn = document.getElementById('search-btn');
 const refreshBtn = document.getElementById('refresh-btn');
+
+// ==========================
+// UI TRANSLATIONS (ONLY UI)
+// ==========================
 const translations = {
-   en: {
-       welcomeMsg: 'Explore the collection',
-       searchBtn: 'Search',
-       refreshBtn: 'Refresh',
-   },
-   es: {
-       welcomeMsg: 'Explorar la colección',
-       searchBtn: 'Buscar',
-       refreshBtn: 'Recargar',
-   }
+  en: {
+    welcomeMsg: "Explore the collection",
+    searchBtn: "Search",
+    refreshBtn: "Refresh",
+    resourceTitle: "Resource Title",
+    languages: "Languages",
+    countries: "Countries",
+    scope: "Scope and Contents",
+    subjects: "Subjects in English"
+  },
+  es: {
+    welcomeMsg: "Explorar la colección",
+    searchBtn: "Buscar",
+    refreshBtn: "Recargar",
+    resourceTitle: "Título del recurso",
+    languages: "Idiomas",
+    countries: "Países",
+    scope: "Alcance y Contenido",
+    subjects: "Materias en Español"
+  }
 };
 
 // ==========================
-// TRANSLATION
-// ==========================
-let currentLanguage = 'en'; // Default language
-
-function translatePage(language) {
-   currentLanguage = language;
-
-   // Update text content for the specified language
-   welcomeMsg.textContent = translations[language].welcomeMsg;
-   searchBtn.textContent = translations[language].searchBtn;
-   refreshBtn.textContent = translations[language].refreshBtn;
-}
-
-// Initial translation based on the default language
-translatePage(currentLanguage);
-
-// Handle language selection from translation language links
-document.querySelector('.translation').addEventListener('click', function (event) {
-   const selectedLanguage = event.target.getAttribute('data-lang');
-   if (selectedLanguage) {
-       event.preventDefault(); // Prevent default page reload
-       translatePage(selectedLanguage);
-   }
-});
-
-// ==========================
-// DATA STORAGE
+// STATE
 // ==========================
 let apiData = [];
+let currentLanguage = 'en';
+
+// ==========================
+// LANGUAGE SWITCHER
+// ==========================
+const langSwitcher = document.querySelector('.translation');
+
+if (langSwitcher) {
+  langSwitcher.addEventListener('click', (event) => {
+    const lang = event.target.getAttribute('data-lang');
+    if (!lang) return;
+
+    event.preventDefault();
+    translatePage(lang);
+  });
+}
+
+// ==========================
+// TRANSLATION FUNCTION
+// ==========================
+function translatePage(language) {
+  currentLanguage = language;
+
+  welcomeMsg.textContent = translations[language].welcomeMsg;
+  searchBtn.textContent = translations[language].searchBtn;
+  refreshBtn.textContent = translations[language].refreshBtn;
+
+  // re-render content in new language
+  displayData(apiData);
+}
+
+// initial language
+translatePage(currentLanguage);
 
 // ==========================
 // FETCH DATA
 // ==========================
-async function getData(url) {
+async function getData() {
   try {
-    const response = await fetch(url);
-    const data = await response.json();
+    const res = await fetch(googleSheet);
+    apiData = await res.json();
 
-    apiData = data;
-    console.log(apiData);
+    console.log("DATA LOADED:", apiData);
 
     displayData(apiData);
 
-  } catch (error) {
-    console.error(error);
-    alert(error.message);
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
   }
 }
 
-getData(googleSheet);
+getData();
 
 // ==========================
-// SEARCH HANDLING
+// SEARCH
 // ==========================
 function runSearch() {
-  const searchTerms = input.value.trim();
-  filterData(searchTerms);
+  filterData(input.value.trim());
 }
 
 searchBtn.addEventListener('click', runSearch);
 
-input.addEventListener('keypress', (event) => {
-  if (event.key === 'Enter') {
-    runSearch();
-}
+input.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') runSearch();
 });
 
 refreshBtn.addEventListener('click', () => {
- input.value = '';
- runSearch();
+  input.value = '';
+  displayData(apiData);
 });
 
 // ==========================
-// FILTER DATA
+// FILTER
 // ==========================
 function filterData(query) {
   if (!query) {
@@ -103,57 +126,91 @@ function filterData(query) {
     return;
   }
 
-  const searchTerms = query
-    .toLowerCase()
-    .split(/\s+/)
-    .map(term => removeDiacritics(term));
+  const terms = query.toLowerCase().split(/\s+/);
 
-  const filteredData = apiData.filter(item => {
-    return searchTerms.every(term => {
-      return Object.values(item).some(value => {
-        if (typeof value === 'string') {
-          return removeDiacritics(value.toLowerCase()).includes(term);
-        }
-        return false;
-      });
-    });
-  });
+  const filtered = apiData.filter(item =>
+    terms.every(term =>
+      Object.values(item).some(val =>
+        typeof val === 'string' &&
+        val.toLowerCase().includes(term)
+      )
+    )
+  );
 
-  displayData(filteredData);
+  displayData(filtered);
 }
 
 // ==========================
-// REMOVE ACCENTS
-// ==========================
-function removeDiacritics(str = '') {
-  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
-
-// ==========================
-// DISPLAY DATA
+// DISPLAY
 // ==========================
 function displayData(data) {
-  display.innerHTML = data.map(object => `
+
+  if (!display) return;
+
+  display.innerHTML = data.map(obj => `
     <article class="item">
+
       <div class="item-header">
         <h2>
-          <a href="${object.URL}" target="_blank" rel="noopener noreferrer">
-            ${object.Resource_Title || ''}
+          <a href="${obj.URL}" target="_blank" rel="noopener noreferrer">
+            ${obj.SNAC_Holding_Repository || ''}
           </a>
         </h2>
-        <p>${object.Institutional_Hosts || ''}</p>
       </div>
 
+      <br/>
+
       <div class="item-description">
-        <p><span class="inline-label">Resource Types:</span> ${object.Resource_Types || ''}</p>
-        <p><span class="inline-label">Subjects in English:</span> ${object.Subjects_in_English || ''}</p>
-        <p><span class="inline-label">Materias en Español:</span> ${object.Materias_en_Espanol || ''}</p>
-        <p><span class="inline-label">Assuntos em Português:</span> ${object.Assuntos_em_Portugues || ''}</p>
-        <p><span class="inline-label">Languages:</span> ${object.Languages || ''}</p>
-        <p><span class="inline-label">Countries:</span> ${object.Countries || ''}</p>
-        <p><span class="inline-label">Time Coverage:</span> ${object.Time_Coverage || ''}</p>
-        <p><span class="inline-label">Summary:</span> ${object.Summary || ''}</p>
+
+        <h3>
+          <span class="inline-label">
+            ${translations[currentLanguage].resourceTitle}:
+          </span>
+          <a href="${obj.URL}" target="_blank" rel="noopener noreferrer">
+            ${obj.Resource_Title || ''}
+          </a>
+        </h3>
+
+        <p>
+          <span class="inline-label">
+            ${translations[currentLanguage].scope}:
+          </span>
+          ${currentLanguage === "es"
+            ? obj.Alcance_y_Contenido || ''
+            : obj.Scope_and_Contents || ''}
+        </p>
+
+        <p>
+          <span class="inline-label">
+            ${translations[currentLanguage].subjects}:
+          </span>
+          ${currentLanguage === "es"
+            ? obj.Materias_en_Espanol || ''
+            : obj.Subjects_in_English || ''}
+        </p>
+
+        <p>
+          <span class="inline-label">
+            ${translations[currentLanguage].languages}:
+          </span>
+          ${currentLanguage === "es"
+            ? obj.Idiomas || ''
+            : obj.Languages || ''}
+        </p>
+
+        <p>
+          <span class="inline-label">
+            ${translations[currentLanguage].countries}:
+          </span>
+          ${currentLanguage === "es"
+            ? obj.Paises || ''
+            : obj.Countries || ''}
+        </p>
+
       </div>
+
     </article>
   `).join('');
 }
+
+}); // DOM READY END
